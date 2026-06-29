@@ -85,26 +85,31 @@ def confirm_data():
 st.set_page_config(layout="wide", page_title="Анализ Временных Рядов")
 st.title("📈 Анализ трендов и прогнозирование пробоя")
 
+use_demo = st.sidebar.checkbox("Использовать демонстрационные данные", value=False)
+
 uploaded_file = st.file_uploader("Загрузите таблицу данных (Excel или CSV)", type=['xlsx', 'csv'],
                                  on_change=reset_confirmation)
 
+final_file = None
 if uploaded_file is not None:
-    is_csv = uploaded_file.name.endswith('.csv')
+    final_file = uploaded_file
+    is_demo = False
+elif use_demo:
+    final_file = "USDRUB_220118_260618 11.03.2025.csv"
+    is_demo = True
 
-    if is_csv:
-        delimiter = st.radio(
-            "🔠 Рразделитель столбцов в CSV:",
-            options=[";", ",", "\\t", "|"],
-            index=0,
-            horizontal=True,
-            on_change=reset_confirmation
-        )
-
+if final_file is not None:
     try:
-        if is_csv:
-            raw_df = pd.read_csv(uploaded_file, sep=delimiter)
+        if isinstance(final_file, str):
+            if final_file.endswith('.csv'):
+                raw_df = pd.read_csv(final_file, sep=';')
         else:
-            raw_df = pd.read_excel(uploaded_file, sheet_name=0)
+            is_csv = uploaded_file.name.endswith('.csv')
+            if is_csv:
+                delimiter = st.radio("🔠 Разделитель столбцов в CSV:", options=[";", ",", "\\t", "|"], index=0, horizontal=True)
+                raw_df = pd.read_csv(final_file, sep=delimiter)
+            else:
+                raw_df = pd.read_excel(final_file)
     except Exception as e:
         st.error(f"Ошибка при чтении файла: {e}")
         st.stop()
