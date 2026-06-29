@@ -143,7 +143,15 @@ if final_file is not None:
     if st.session_state.data_confirmed:
 
         df = pd.DataFrame()
-        df['Date'] = pd.to_datetime(raw_df[date_col].astype(str).str.strip(), errors='coerce')
+        temp_dates = pd.to_datetime(raw_df[date_col].astype(str).str.strip(), errors='coerce')
+
+        if temp_dates.isna().all():
+            st.error(f"❌ **Ошибка в столбце '{date_col}':** Данные не могут быть преобразованы в даты.")
+            st.info(
+                "Пожалуйста, убедитесь, что выбран правильный столбец или проверьте формат дат в вашем файле.")
+            st.stop()
+
+        df['Date'] = temp_dates
         df['Raw_Value'] = pd.to_numeric(raw_df[val_col], errors='coerce').fillna(0)
         df = df.dropna(subset=['Date']).sort_values('Date').reset_index(drop=True)
 
